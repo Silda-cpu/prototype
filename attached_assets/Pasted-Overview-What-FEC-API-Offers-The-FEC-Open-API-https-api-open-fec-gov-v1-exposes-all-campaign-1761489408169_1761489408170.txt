@@ -1,0 +1,230 @@
+Overview — What FEC API Offers
+
+The FEC Open API (https://api.open.fec.gov/v1/) exposes all campaign finance data filed with the U.S. Federal Election Commission — covering donors, PACs, candidates, committees, expenditures, and election filings.
+
+You can use it to track:
+
+Which corporations or PACs gave money
+
+Who the recipients were (candidates or committees)
+
+When and how much was given
+
+Which party or office (Senate, House, President) the recipients belong to
+
+What the money was used for (disbursement purpose)
+
+And even how much each PAC has on hand or spends in each election cycle
+
+⚙️ Main Endpoints You’ll Use
+Endpoint	What it returns	Useful for your app
+/committees/	All registered political committees (PACs, candidate committees, party committees)	Find corporate PACs linked to companies
+/disbursements/	Outgoing payments made by committees	Show how a PAC spends money (donations, admin, advertising, etc.)
+/schedule_a/	Contributions received by a committee	Show who funds a PAC
+/candidates/	Candidate information (party, state, office)	Link recipients to their political party
+/totals/	Financial summary for a candidate or committee	Get total receipts/disbursements for a cycle
+/committee/{committee_id}/reports/	Official filed financial reports	Confirm totals per reporting period
+/elections/	Election-level aggregates	Optional (for context or filters)
+🧩 Step-by-Step with Real API Examples
+1️⃣ Search for a company’s PAC (Committee)
+Example
+
+Find PACs related to Pfizer:
+
+GET https://api.open.fec.gov/v1/committees/?api_key=YOUR_KEY&name=Pfizer
+
+Example Response
+{
+  "results": [
+    {
+      "committee_id": "C00150367",
+      "name": "PFIZER INC. PAC",
+      "committee_type": "Q",
+      "designation_full": "Qualified non-party committee",
+      "organization_type_full": "Corporation",
+      "connected_organization_name": "Pfizer Inc.",
+      "treasurer_name": "John Smith",
+      "state": "NY",
+      "party_full": null
+    }
+  ]
+}
+
+
+✅ You can use this to:
+
+Get the committee_id for the company’s official PAC
+
+Confirm it’s a corporate PAC (committee_type: Q)
+
+Display name, organization, treasurer, and state in your app
+
+2️⃣ Get all political donations (disbursements) made by that PAC
+Example
+
+Find all outgoing payments made by Pfizer Inc. PAC in 2024:
+
+GET https://api.open.fec.gov/v1/disbursements/?api_key=YOUR_KEY&committee_id=C00150367&min_date=2024-01-01&max_date=2024-12-31
+
+Example Response
+{
+  "results": [
+    {
+      "committee_id": "C00150367",
+      "committee_name": "PFIZER INC. PAC",
+      "disbursement_amount": 5000.00,
+      "disbursement_date": "2024-03-01",
+      "recipient_name": "FRIENDS OF JANE DOE",
+      "recipient_committee_id": "C00789456",
+      "disbursement_purpose": "Contribution to federal candidate"
+    },
+    {
+      "committee_id": "C00150367",
+      "disbursement_amount": 1200.00,
+      "recipient_name": "ACME PRINTING SERVICES",
+      "disbursement_purpose": "Office supplies (administrative)"
+    }
+  ]
+}
+
+
+✅ You can use this to:
+
+Identify which payments are political donations (disbursement_purpose = “Contribution to candidate”)
+
+Show recipient name, date, and amount
+
+Filter out admin costs or vendor payments
+
+Calculate total contributions in a date range
+
+3️⃣ Get recipient details (candidate → party affiliation)
+
+Each donation has a recipient_candidate_id or recipient_committee_id.
+
+Example
+GET https://api.open.fec.gov/v1/candidates/?api_key=YOUR_KEY&candidate_id=H0CA10149
+
+Example Response
+{
+  "results": [
+    {
+      "candidate_id": "H0CA10149",
+      "name": "Jane Doe",
+      "party_full": "Democratic Party",
+      "office_full": "U.S. House",
+      "state": "CA"
+    }
+  ]
+}
+
+
+✅ You can use this to:
+
+Label donations by political party (“Democratic” / “Republican”)
+
+Display candidate name and office (e.g., “Jane Doe — Democrat, California”)
+
+Calculate party ratio for your brand’s political alignment
+
+4️⃣ Get committee totals (PAC-level summary)
+Example
+GET https://api.open.fec.gov/v1/committee/C00150367/totals/?api_key=YOUR_KEY&cycle=2024
+
+Example Response
+{
+  "results": [
+    {
+      "committee_id": "C00150367",
+      "committee_name": "PFIZER INC. PAC",
+      "cycle": 2024,
+      "receipts": 2165400.0,
+      "disbursements": 2108800.0,
+      "cash_on_hand_end_period": 56000.0
+    }
+  ]
+}
+
+
+✅ You can use this to:
+
+Show PAC’s total donations or expenditures in a given election cycle
+
+Add credibility with a “Total PAC spending” number
+
+5️⃣ Get who funds the PAC (contributors)
+Example
+GET https://api.open.fec.gov/v1/schedule_a/?api_key=YOUR_KEY&committee_id=C00150367&min_date=2024-01-01&max_date=2024-12-31
+
+Example Response
+{
+  "results": [
+    {
+      "contributor_name": "John Smith",
+      "contributor_employer": "Pfizer Inc.",
+      "contribution_receipt_amount": 2000.00,
+      "contribution_receipt_date": "2024-02-15"
+    }
+  ]
+}
+
+
+✅ You can use this to:
+
+Track which employees or entities contribute to a corporate PAC
+
+Show patterns of self-funding or internal PAC support
+
+🧮 Example Full Data Flow for One Brand
+Step	Endpoint	Purpose	App Field
+1. /committees/?name=CompanyName	Find PAC	pacName, committee_id	
+2. /disbursements/?committee_id=…	Donations given	totalDonations, lastDonationDate	
+3. /candidates/?candidate_id=…	Party alignment	partyBreakdown, recipientParty	
+4. /committee/{id}/totals/	Overall PAC summary	totalSpending	
+5. /schedule_a/?committee_id=…	Donors to the PAC	(optional “internal contributors”)	
+📊 Example Aggregated Result (ready for your app)
+{
+  "company": "Pfizer Inc.",
+  "pacName": "Pfizer Inc. PAC",
+  "committeeId": "C00150367",
+  "totalDonations": 185000,
+  "lastDonationDate": "2024-09-20",
+  "partyBreakdown": [
+    { "party": "Democratic", "amount": 120000 },
+    { "party": "Republican", "amount": 65000 }
+  ],
+  "topRecipients": [
+    { "name": "Jane Doe (D-CA)", "amount": 5000 },
+    { "name": "John Smith (R-TX)", "amount": 4000 }
+  ],
+  "source": "FEC API"
+}
+
+🧭 Optional Advanced Queries
+Purpose	Example Query
+Filter by election cycle	&cycle=2024
+Filter by state	&state=CA
+Get all corporate PACs	&committee_type=Q&organization_type=COR
+Get all disbursements above $10,000	&min_amount=10000
+Sort by date or amount	&sort=-disbursement_amount
+🧠 Summary — What You Can Actually Use in Your App
+UI Element	FEC Data Source	API Endpoint
+PAC Name	connected_organization_name, committee_name	/committees/
+Total Political Contributions	disbursement_amount (sum)	/disbursements/
+Last Activity Date	disbursement_date	/disbursements/
+Party Breakdown	party_full (from candidate)	/candidates/
+Top Recipients	recipient_name, disbursement_amount	/disbursements/
+Data Source ID	committee_id	/committees/
+
+✅ In short:
+The FEC API lets you quantify and visualize a company’s real-world political influence by tracking:
+
+How much its PAC spends
+
+Who it donates to
+
+Which party benefits most
+
+When it last acted politically
+
+Those data points map 1:1 to your app’s “Political Donations” section.

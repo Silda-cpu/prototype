@@ -1,0 +1,594 @@
+A bold, movement‑driven look fused with credible, data‑forward UI.
+
+Identity blend: 🔥 Activist energy + 💼 Smart consumer calm.
+
+Primary: #E11D48 (rose‑600), #0F172A (slate‑900)
+
+Accent: #F97316 (orange‑500), #22C55E (emerald‑500), #3B82F6 (blue‑500)
+
+Neutrals: slate‑50/100/300/700
+
+Gradients: Rose → Orange for CTAs; Navy → Indigo for data sections
+
+Type: Headings Inter (bold, tight tracking), Body Nunito (legible, friendly)
+
+Iconography: Lucide outline with subtle fills on hover
+
+Motion: Short, purposeful (150–220ms). Use entrance fades, scale‑in for cards, and progress shimmers for loading
+
+Layout & Rhythm
+
+Container: max‑w‑7xl, generous py-10 vertical rhythm
+
+Grid: 12‑col on desktop, 6‑col on tablet, 2‑col on mobile
+
+Cards: rounded‑2xl, shadow‑md → shadow‑xl on hover, 1px hairline borders in slate‑200
+
+Spacing: base spacing unit 8px. Stick to multiples (8/12/16/24/32)
+
+Contrast blocks: alternate light and dark sections to segment content
+
+Navigation Flow (Proposed)
+
+Hero / Home → value proposition + primary CTA: Explore brands
+
+Explore (categories + quick filters) → drill into a category
+
+Brand list (sorted by Impact Score) → pick a brand
+
+Brand detail
+
+Impact Score w/ breakdown (Environment, Workers, Governance)
+
+“Support” / “Avoid” CTAs
+
+Evidence links (badges: report, article, rating)
+
+Favorites (impact tracking, shareable list)
+
+Request a Brand (3‑step modal)
+
+Component Library Setup
+
+Use Tailwind + shadcn/ui + lucide-react.
+
+Tailwind utility tokens
+// tailwind.config.js
+export default {
+  content: ["./index.html","./src/**/*.{ts,tsx}"],
+  theme: {
+    extend: {
+      fontFamily: {
+        heading: ["Inter", "ui-sans-serif", "system-ui"],
+        body: ["Nunito", "ui-sans-serif", "system-ui"],
+      },
+      colors: {
+        brand: {
+          primary: "#E11D48", // rose-600
+          primaryDark: "#9F1239",
+          accent: "#F97316", // orange-500
+          trust: "#0F172A",  // slate-900
+        },
+      },
+      boxShadow: {
+        card: "0 8px 24px -8px rgba(2,6,23,0.2)",
+      },
+      borderRadius: {
+        xl2: "1.25rem",
+      },
+    },
+  },
+  plugins: [],
+}
+Global styles
+/* src/index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+:root { color-scheme: light dark; }
+
+
+html, body, #root { height: 100%; }
+body { @apply bg-slate-50 text-slate-800 font-body; }
+
+
+.gradient-cta { @apply bg-gradient-to-r from-rose-600 to-orange-500 text-white; }
+.gradient-data { @apply bg-gradient-to-r from-slate-900 to-indigo-900 text-white; }
+.card { @apply bg-white border border-slate-200 rounded-2xl shadow-card; }
+.card-hover { @apply transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-xl; }
+.hairline { @apply border border-slate-200/60; }
+Shared UI Elements
+Buttons
+// src/components/ui/PrimaryButton.tsx
+import { ButtonHTMLAttributes } from "react";
+
+
+export function PrimaryButton(props: ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button
+      {...props}
+      className={`gradient-cta rounded-2xl px-5 py-3 font-heading text-sm uppercase tracking-wide shadow-card focus:outline-none focus:ring-2 focus:ring-rose-400 disabled:opacity-60 ${props.className ?? ""}`}
+    />
+  );
+}
+
+
+export function GhostButton(props: ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button
+      {...props}
+      className={`rounded-2xl px-5 py-3 font-heading text-sm uppercase tracking-wide border border-slate-300 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 ${props.className ?? ""}`}
+    />
+  );
+}
+Score Badge
+// src/components/ScoreBadge.tsx
+interface ScoreBadgeProps { score: number | null; size?: "sm"|"md"|"lg"; }
+
+
+export function ScoreBadge({ score, size="md" }: ScoreBadgeProps) {
+  const bucket = score == null ? "none" : score >= 70 ? "high" : score >= 40 ? "mid" : "low";
+  const map = {
+    none: { ring: "ring-slate-300", text: "text-slate-500", label: "No data" },
+    high: { ring: "ring-emerald-400", text: "text-emerald-600", label: "Strong" },
+    mid:  { ring: "ring-amber-400", text: "text-amber-600", label: "Mixed" },
+    low:  { ring: "ring-rose-400", text: "text-rose-600", label: "Risk" },
+  }[bucket];
+
+
+  const dim = size === "lg" ? "w-16 h-16 text-lg" : size === "sm" ? "w-9 h-9 text-xs" : "w-12 h-12 text-sm";
+
+
+  return (
+    <div className={`grid place-items-center rounded-full ring-4 ${map.ring} bg-white ${dim}`}>
+      <div className={`font-heading font-semibold ${map.text}`}>{score ?? "–"}</div>
+      <div className="sr-only">Impact score: {score ?? "No data"} ({map.label})</div>
+    </div>
+  );
+}
+Tag / Evidence Chips
+// src/components/Tag.tsx
+export function Tag({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center gap-2 rounded-xl bg-slate-100 px-3 py-1 text-xs text-slate-700 border border-slate-200">
+      {children}
+    </span>
+  );
+}
+Screens & Components
+1) Home / Hero
+
+Goals: Deliver the mission, then drive to Explore.
+
+Key UX: Large statement, subtle motion gradient, single primary CTA.
+
+// src/pages/Home.tsx
+import { PrimaryButton } from "../components/ui/PrimaryButton";
+import { ArrowRight } from "lucide-react";
+
+
+export default function Home({ onExplore }: { onExplore: () => void }) {
+  return (
+    <section className="relative overflow-hidden">
+      <div className="gradient-data">
+        <div className="mx-auto max-w-7xl px-6 py-24">
+          <h1 className="font-heading text-4xl sm:text-5xl font-black tracking-tight">Buy with Power. <span className="opacity-90">Back it with Data.</span></h1>
+          <p className="mt-6 max-w-2xl text-slate-200 text-lg">
+            Discover how brands treat people and the planet. Make every purchase a vote for change.
+          </p>
+          <div className="mt-10">
+            <PrimaryButton onClick={onExplore}>
+              Explore brands <ArrowRight className="inline ml-2 size-4" />
+            </PrimaryButton>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+Label upgrades
+
+Title: Buy with Power. Back it with Data.
+
+CTA: Explore brands
+
+Helper: Make every purchase a vote for change.
+
+2) Explore — Categories
+
+UX: Big, tappable tiles; quick filters; search prominence.
+
+// src/pages/Explore.tsx
+import { useState } from "react";
+import { Search, Filter } from "lucide-react";
+
+
+const categories = [
+  { id: "grocery", label: "Grocery", icon: "🥕" },
+  { id: "hardware", label: "Hardware", icon: "🔧" },
+  { id: "fashion", label: "Fashion", icon: "👕" },
+  { id: "insurance", label: "Insurance", icon: "🛡️" },
+];
+
+
+export default function Explore({ onSelect }: { onSelect: (id: string) => void }) {
+  const [q, setQ] = useState("");
+
+
+  return (
+    <section className="mx-auto max-w-7xl px-6 py-10">
+      <div className="flex items-center justify-between gap-4">
+        <h2 className="font-heading text-2xl">Explore categories</h2>
+        <button className="hairline px-3 py-2 rounded-xl text-slate-700 hover:bg-white"><Filter className="inline size-4 mr-2"/>Quick filters</button>
+      </div>
+
+
+      <div className="mt-6 relative">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-400"/>
+        <input
+          value={q}
+          onChange={e => setQ(e.target.value)}
+          placeholder="Search brands or categories"
+          className="w-full rounded-2xl bg-white pl-12 pr-4 py-3 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-rose-400"
+        />
+      </div>
+
+
+      <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {categories.filter(c => c.label.toLowerCase().includes(q.toLowerCase())).map(cat => (
+          <button key={cat.id} onClick={() => onSelect(cat.id)} className="card card-hover flex items-center gap-4 p-5">
+            <div className="text-2xl">{cat.icon}</div>
+            <div className="text-left">
+              <div className="font-heading font-semibold">{cat.label}</div>
+              <div className="text-xs text-slate-500">Top brands ranked by impact</div>
+            </div>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+Labels
+
+Header: Explore categories
+
+Search placeholder: Search brands or categories
+
+Tile helper: Top brands ranked by impact
+
+3) Brand List (within a Category)
+
+UX: Card list with logo, Impact Score, quick badges, and a strong CTA row.
+
+// src/components/BrandCard.tsx
+import { ScoreBadge } from "./ScoreBadge";
+import { ChevronRight, Star } from "lucide-react";
+
+
+export interface Brand {
+  id: string; name: string; logoUrl?: string; score: number | null; badges?: string[];
+}
+
+
+export function BrandCard({ brand, onOpen, onToggleFavorite, isFav }: {
+  brand: Brand; onOpen: (id: string) => void; onToggleFavorite: (id: string) => void; isFav: boolean;
+}) {
+  return (
+    <div className="card card-hover p-5">
+      <div className="flex items-center gap-4">
+        <img src={brand.logoUrl ?? "/placeholder-logo.svg"} alt="" className="size-12 rounded-xl object-contain bg-white border border-slate-200"/>
+        <div className="flex-1">
+          <div className="font-heading text-lg">{brand.name}</div>
+          <div className="mt-1 flex items-center gap-2 text-xs text-slate-600">
+            {(brand.badges ?? []).slice(0,3).map((b,i) => (
+              <span key={i} className="bg-slate-100 border border-slate-200 rounded-lg px-2 py-0.5">{b}</span>
+            ))}
+          </div>
+        </div>
+        <ScoreBadge score={brand.score} />
+      </div>
+
+
+      <div className="mt-5 flex items-center justify-between">
+        <button onClick={() => onOpen(brand.id)} className="text-sm font-heading uppercase tracking-wide text-slate-700 hover:text-slate-900">
+          View impact <ChevronRight className="inline size-4 ml-1"/>
+        </button>
+        <button onClick={() => onToggleFavorite(brand.id)} className={`rounded-xl px-3 py-2 border text-sm ${isFav ? "bg-amber-50 border-amber-300 text-amber-700" : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50"}`}>
+          <Star className={`inline size-4 mr-1 ${isFav ? "fill-amber-400" : ""}`} /> {isFav ? "Saved" : "Save"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+Labels
+
+CTA: View impact, Save / Saved
+
+Badge copy examples: Worker Fairness 82, Climate Policy C+, Diversity Report ✓
+
+4) Brand Detail
+
+UX: Impact header with big score, breakdown bars, and decisive CTAs.
+
+// src/pages/BrandDetail.tsx
+import { GhostButton, PrimaryButton } from "../components/ui/PrimaryButton";
+import { ScoreBadge } from "../components/ScoreBadge";
+import { Link as LinkIcon, Share2 } from "lucide-react";
+
+
+export default function BrandDetail({ brand, onSupport, onAvoid }: any) {
+  return (
+    <section>
+      <header className="gradient-data">
+        <div className="mx-auto max-w-7xl px-6 py-14 flex items-center gap-6">
+          <img src={brand.logoUrl} className="size-16 rounded-xl bg-white border border-slate-200"/>
+          <div className="flex-1">
+            <h2 className="font-heading text-3xl font-black">{brand.name}</h2>
+            <p className="text-slate-300">Independent Impact Score, updated quarterly</p>
+          </div>
+          <ScoreBadge score={brand.score} size="lg"/>
+        </div>
+      </header>
+
+
+      <div className="mx-auto max-w-7xl px-6 py-10 grid md:grid-cols-3 gap-8">
+        {/* Breakdown */}
+        <div className="md:col-span-2 card p-6">
+          <h3 className="font-heading text-xl">Score breakdown</h3>
+          <ul className="mt-4 space-y-4">
+            {[
+              { k: "Environment", v: brand.env },
+              { k: "Workers", v: brand.workers },
+              { k: "Governance", v: brand.gov },
+            ].map(({k,v}) => (
+              <li key={k}>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-700">{k}</span>
+                  <span className="font-semibold">{v}</span>
+                </div>
+                <div className="mt-2 h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className={`h-full ${v>=70?"bg-emerald-500":v>=40?"bg-amber-500":"bg-rose-500"}`} style={{width: `${v}%`}}/>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+
+        {/* Actions */}
+        <aside className="space-y-4">
+          <div className="card p-6">
+            <h4 className="font-heading text-lg">Take action</h4>
+            <p className="text-sm text-slate-600 mt-1">Let your wallet speak.</p>
+            <div className="mt-4 flex gap-3">
+              <PrimaryButton onClick={onSupport}>Support</PrimaryButton>
+              <GhostButton onClick={onAvoid}>Avoid</GhostButton>
+            </div>
+          </div>
+
+
+          <div className="card p-6">
+            <h4 className="font-heading text-lg">Evidence</h4>
+            <ul className="mt-2 space-y-2 text-sm">
+              {brand.sources?.map((s: any, i: number) => (
+                <li key={i} className="flex items-center gap-2 text-slate-700">
+                  <LinkIcon className="size-4"/> <a className="underline" href={s.url} target="_blank" rel="noreferrer">{s.label}</a>
+                </li>
+              ))}
+            </ul>
+            <button className="mt-4 text-xs text-slate-500 hover:text-slate-800 flex items-center gap-2">
+              <Share2 className="size-4"/> Share this brand
+            </button>
+          </div>
+        </aside>
+      </div>
+    </section>
+  );
+}
+
+Labels
+
+Headline: Independent Impact Score, updated quarterly
+
+Actions: Support, Avoid, Share this brand
+
+Section: Score breakdown, Evidence
+
+5) Favorites (with empty state)
+// src/pages/Favorites.tsx
+import { PrimaryButton } from "../components/ui/PrimaryButton";
+
+
+export default function Favorites({ items, onExplore }: any) {
+  if (!items?.length) {
+    return (
+      <section className="mx-auto max-w-3xl px-6 py-20 text-center">
+        <div className="card p-10">
+          <h3 className="font-heading text-2xl">No favorites yet</h3>
+          <p className="mt-2 text-slate-600">Your first pick could spark change. Save brands to build your impact list.</p>
+          <div className="mt-6"><PrimaryButton onClick={onExplore}>Find brands</PrimaryButton></div>
+        </div>
+      </section>
+    );
+  }
+
+
+  return (
+    <section className="mx-auto max-w-7xl px-6 py-10">
+      <h2 className="font-heading text-2xl">Your saved brands</h2>
+      <p className="text-slate-600">Track and share your favorites.</p>
+      {/* render list */}
+    </section>
+  );
+}
+
+Labels
+
+Empty: Your first pick could spark change.
+
+CTA: Find brands, Your saved brands
+
+6) Request a Brand — 3‑Step Modal
+
+UX: Guided, emotional and specific. Progress at top, clear CTA at bottom.
+
+// src/components/RequestBrandModal.tsx
+  const [category, setCategory] = useState("");
+  const [url, setUrl] = useState("");
+  const [reason, setReason] = useState("");
+
+
+  const canNext = step===1 ? !!name : step===2 ? !!reason : true;
+
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4">
+      <div className="w-full max-w-xl bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b">
+          <div className="text-sm text-slate-600">Step {step} of 3</div>
+          <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100"><X className="size-4"/></button>
+        </div>
+
+
+        <div className="p-6 space-y-6">
+          {step === 1 && (
+            <div>
+              <h3 className="font-heading text-xl">Who needs the spotlight?</h3>
+              <p className="text-slate-600 text-sm">Tell us the brand and where we can learn more.</p>
+              <div className="mt-4 space-y-3">
+                <input value={name} onChange={e=>setName(e.target.value)} className="w-full rounded-xl border border-slate-300 px-3 py-2" placeholder="Brand name"/>
+                <input value={category} onChange={e=>setCategory(e.target.value)} className="w-full rounded-xl border border-slate-300 px-3 py-2" placeholder="Category (optional)"/>
+                <input value={url} onChange={e=>setUrl(e.target.value)} className="w-full rounded-xl border border-slate-300 px-3 py-2" placeholder="Website (optional)"/>
+              </div>
+            </div>
+          )}
+
+
+          {step === 2 && (
+            <div>
+              <h3 className="font-heading text-xl">Why does it matter?</h3>
+              <p className="text-slate-600 text-sm">Share the issue, claim, or praise. Links help.</p>
+              <textarea value={reason} onChange={e=>setReason(e.target.value)} className="w-full min-h-[120px] rounded-xl border border-slate-300 px-3 py-2" placeholder="Your reason (e.g., " + `"labor practices, climate policy, sourcing..."` + ")"/>
+            </div>
+          )}
+
+
+          {step === 3 && (
+            <div>
+              <h3 className="font-heading text-xl">Review & send</h3>
+              <div className="mt-4 space-y-2 text-sm">
+                <div><span className="text-slate-500">Brand:</span> {name || "—"}</div>
+                <div><span className="text-slate-500">Category:</span> {category || "—"}</div>
+                <div><span className="text-slate-500">Website:</span> {url || "—"}</div>
+                <div><span className="text-slate-500">Reason:</span> {reason || "—"}</div>
+              </div>
+            </div>
+          )}
+        </div>
+
+
+        <div className="flex items-center justify-between px-6 py-4 border-t bg-slate-50">
+          <GhostButton onClick={() => setStep(Math.max(1, step-1))}>Back</GhostButton>
+          {step < 3 ? (
+            <PrimaryButton disabled={!canNext} onClick={() => setStep(step+1)}>Next</PrimaryButton>
+          ) : (
+            <PrimaryButton onClick={() => onSubmit({ name, category, url, reason })}>Submit request</PrimaryButton>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+Labels
+
+Step 1: Who needs the spotlight?
+
+Step 2: Why does it matter?
+
+Step 3: Review & send
+
+CTA: Submit request
+
+Microcopy & Labels (Cheat‑Sheet)
+
+Global
+
+Search: Search brands or categories
+
+Empty: Your first pick could spark change.
+
+Save: Save → Saved
+
+Home
+
+Title: Buy with Power. Back it with Data.
+
+CTA: Explore brands
+
+Explore
+
+Header: Explore categories
+
+Helper: Top brands ranked by impact
+
+Brand Detail
+
+Section: Score breakdown, Evidence
+
+Actions: Support, Avoid, Share this brand
+
+Request Modal
+
+Step 1: Who needs the spotlight?
+
+Step 2: Why does it matter?
+
+Step 3: Review & send
+
+Final CTA: Submit request
+
+Motion & Feedback
+
+Hover: card elevate + subtle -2px translateY
+
+Press: scale to 0.98 for buttons, 100ms
+
+Loading: skeleton shimmer bars for breakdown chart; spinner only for blocking actions
+
+Transitions: page fade‑in (150ms), modal scale‑in (180ms)
+
+Accessibility & Quality
+
+Minimum text contrast 4.5:1 for body, 3:1 for large headlines
+
+Always provide sr-only labels for scores and icons
+
+Focus outlines on all interactive elements (ring‑2 matching context color)
+
+Respect reduced motion (media query) to disable intense animations
+
+Implementation Notes
+
+Drop these components into your existing routes and wire them to your current data
+
+Replace placeholder colors with theme tokens where possible
+
+If you already use shadcn/ui, you can swap PrimaryButton/GhostButton with shadcn buttons styled with the gradient classes
+
+Next Steps Checklist
+
+Integrate the Home, Explore, BrandCard, BrandDetail, Favorites, and RequestBrandModal components
+
+Align your data model with Brand interface (add score, badges, sources)
+
+Replace existing labels with the cheat‑sheet
+
+Add skeleton loaders & hover/press states
+
+Test on mobile: tap targets ≥ 44px, font size ≥ 16px

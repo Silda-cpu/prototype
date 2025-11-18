@@ -1,0 +1,117 @@
+Update the company detail screen (like Square) so the “Political Donations”, “Lobbying Activities”, and “Public Statements & Actions” sections are ready to display real data later, using realistic mock data now.
+
+🧠 General Concept
+
+Each company will soon connect to public datasets like the Federal Election Commission (FEC) API and OpenSecrets API, which track corporate political donations and lobbying.
+For now, the prototype must show how those data fields will appear using mock data placeholders.
+
+🏛 Political Donations Section
+
+Purpose:
+Show if a company or its PAC (Political Action Committee) donates to political candidates or committees.
+
+Mock Data Fields (to include in JSON or local object):
+
+{
+  "available": true,
+  "pacName": "Block Inc. PAC",
+  "totalDonations": 195000,
+  "lastDonationDate": "2024-08-12",
+  "partyBreakdown": [
+    { "party": "Democratic", "amount": 120000 },
+    { "party": "Republican", "amount": 75000 }
+  ],
+  "topRecipients": [
+    { "name": "Jane Doe (D-CA)", "amount": 15000 },
+    { "name": "John Smith (R-TX)", "amount": 12000 }
+  ],
+  "source": "FEC API"
+}
+
+
+Display Rules (UI):
+
+If available: false → show “No political donation data available.”
+
+If available: true:
+
+Show PAC name: “Corporate PAC: Block Inc. PAC”
+
+Show total donations: “Total political contributions: $195K (2023–2024)”
+
+Show party breakdown: “62% Democratic / 38% Republican” (use a horizontal bar for ratio)
+
+Show last activity: “Last political activity: Aug 2024”
+
+Optionally list top recipients (two names with party tags)
+
+Add source line: “Source: FEC API (mock data)”
+
+🏛 Lobbying Activities Section
+
+Purpose:
+Later will show data from the OpenSecrets API about lobbying spending.
+
+Mock structure:
+
+{
+  "available": false,
+  "totalLobbyingSpend": null,
+  "lastFilingYear": null,
+  "topIssues": []
+}
+
+
+UI Behavior:
+Keep “No lobbying data available” for now.
+
+💬 Public Statements & Actions Section
+
+Purpose:
+Show known corporate initiatives or positions.
+
+Mock data example:
+
+{
+  "available": true,
+  "tags": ["Small business focus"]
+}
+
+
+Display tags as rounded pills or badges.
+
+🧭 Impact Score Context
+
+Keep Impact Score visible (e.g., “68 — Mixed record on democratic values”).
+Later, this will be recalculated automatically based on donation ratios from FEC data.
+
+🧾 Data Source Footer
+
+Update footer text to:
+
+Data sources: FEC API (mock), OpenSecrets (future), verified corporate and news data. Last updated: Oct 2024.
+
+✅ Minimum UI Expectations
+
+“Political Donations” card shows either:
+
+grey placeholder (no data), or
+
+full info (PAC name, totals, ratio, last activity, and recipients).
+
+“Lobbying Activities” card stays empty.
+
+“Public Statements” card shows one or more example tags.
+
+Keep consistent spacing, rounded cards, light backgrounds.
+
+Include “Impact Score” and “Neutral / Progressive / Conservative” tag as now.
+
+🧠 Example Mock Companies
+
+Add 2–3 mock profiles to demo variations:
+
+Company	Political Profile	Example Summary
+Square (Block Inc.)	Balanced / Neutral	PAC exists, moderate donations to both parties
+ExxonMobil	Conservative	80% of donations to Republican candidates
+Patagonia	Progressive	Majority of donations to Democratic candidates
